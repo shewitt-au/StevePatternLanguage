@@ -4,6 +4,7 @@
 #include <pl/core/log_console.hpp>
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 #include <ctime>
 #include <fmt/format.h>
@@ -65,29 +66,21 @@ namespace pl::lib::libstd::time {
             /* to_local(time) */
             runtime.addFunction(nsStdTime, "to_local", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto time = time_t(params[0].toUnsigned());
+                auto localTime = std::localtime(&time);
 
-                try {
-                    auto localTime = std::localtime(&time);
-                    if (localTime == nullptr) return u128(0);
+                if (localTime == nullptr) return u128(0);
 
-                    return { packTMValue(*localTime, runtime) };
-                } catch (const fmt::format_error&) {
-                    return u128(0);
-                }
+                return { packTMValue(*localTime, runtime) };
             });
 
             /* to_utc(time) */
             runtime.addFunction(nsStdTime, "to_utc", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto time = time_t(params[0].toUnsigned());
+                auto gmTime = std::gmtime(&time);
 
-                try {
-                    auto gmTime = std::gmtime(&time);
-                    if (gmTime == nullptr) return u128(0);
+                if (gmTime == nullptr) return u128(0);
 
-                    return { packTMValue(*gmTime, runtime) };
-                } catch (const fmt::format_error&) {
-                    return u128(0);
-                }
+                return { packTMValue(*gmTime, runtime) };
             });
 
             /* to_epoch(structured_time) */
@@ -116,6 +109,17 @@ namespace pl::lib::libstd::time {
                     return std::string("Invalid");
 
                 return { fmt::format(fmt::runtime(fmt::format("{{:{}}}", formatString)), time) };
+            });
+
+            /* format_tt_locale(time_t) */
+            runtime.addFunction(nsStdTime, "format_tt_locale", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                auto tt = params[0].toUnsigned();
+                const wolv::util::Locale &lc = runtime.getLocale();
+
+                using wolv::util::DTOpts;
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
+
+                return optval;
             });
         }
     }
