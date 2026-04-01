@@ -12,6 +12,8 @@
 
 namespace pl::lib::libstd::time {
 
+    const std::string s_canNotFormat    = "Can not format";
+
     static u128 packTMValue(const std::tm &tm, pl::PatternLanguage &runtime) {
         auto endian = runtime.getInternals().evaluator->getDefaultEndian();
         std::tm tmCopy = tm;
@@ -112,12 +114,15 @@ namespace pl::lib::libstd::time {
             });
 
             /* format_tt_locale(time_t) */
-            runtime.addFunction(nsStdTime, "format_tt_locale", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            runtime.addFunction(nsStdTime, "format_tt", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto tt = params[0].toUnsigned();
                 const wolv::util::Locale &lc = runtime.getLocale();
 
                 using wolv::util::DTOpts;
-                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
+                if (!optval) {
+                    return s_canNotFormat;
+                }
 
                 return optval;
             });
