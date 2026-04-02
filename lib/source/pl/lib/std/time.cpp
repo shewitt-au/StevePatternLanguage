@@ -12,6 +12,7 @@
 
 namespace pl::lib::libstd::time {
 
+    const std::string s_invalid         = "Invalid";
     const std::string s_canNotFormat    = "Can not format";
 
     static u128 packTMValue(const std::tm &tm, pl::PatternLanguage &runtime) {
@@ -113,7 +114,7 @@ namespace pl::lib::libstd::time {
                 return { fmt::format(fmt::runtime(fmt::format("{{:{}}}", formatString)), time) };
             });
 
-            /* format_tt_locale(time_t) */
+            /* format_tt(time_t) */
             runtime.addFunction(nsStdTime, "format_tt", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto tt = params[0].toUnsigned();
                 const wolv::util::Locale &lc = runtime.getLocale();
@@ -125,6 +126,80 @@ namespace pl::lib::libstd::time {
                 }
 
                 return optval;
+            });
+
+            /* format_dos_date(time_t) */
+            runtime.addFunction(nsStdTime, "format_dos_date", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                auto p = params[0].toUnsigned();
+
+                struct DOSDate {
+                    unsigned day   : 5;
+                    unsigned month : 4;
+                    unsigned year  : 7;
+                };
+
+                DOSDate dd;
+                std::memcpy(&dd, &p, sizeof(dd));
+                if ( (dd.day<1 || dd.day>31) || (dd.month<1 || dd.month>12) ) {
+                    return s_invalid;
+                }
+
+                std::tm tm{};
+                tm.tm_year = dd.year + 80;
+                tm.tm_mon  = dd.month - 1;
+                tm.tm_mday = dd.day;
+
+#if defined(OS_WINDOWS)
+                time_t tt = _mkgmtime(&tm);
+#else
+                time_t tt = timegm(&tm);
+#endif
+                if (tt == -1) {
+                    return s_canNotFormat;
+                }
+
+                const wolv::util::Locale &lc = runtime.getLocale();
+
+                using wolv::util::DTOpts;
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D | DTOpts::LongDate);
+                if (!optval) {
+                    return s_canNotFormat;
+                }
+                
+                return *optval;
+            });
+
+            /* format_dos_time(time_t) */
+            runtime.addFunction(nsStdTime, "format_dos_time", FunctionParameterCount::exactly(1), [&runtime](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                auto p = params[0].toUnsigned();
+
+                struct DOSTime {
+                    unsigned seconds : 5;
+                    unsigned minutes : 6;
+                    unsigned hours   : 5;
+                };
+
+                DOSTime dt;
+                std::memcpy(&dt, &p, sizeof(dt));
+
+                if ( (dt.hours<0 || dt.hours>23)     ||
+                     (dt.minutes<0 || dt.minutes>59) ||
+                     (dt.seconds<0 && dt.seconds>29)  )
+                {
+                    return s_invalid;
+                }
+
+                time_t tt = dt.hours*60*60 + dt.minutes*60 + dt.seconds*2;
+
+                const wolv::util::Locale &lc = runtime.getLocale();
+
+                using wolv::util::DTOpts;
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::T);
+                if (!optval) {
+                    return s_canNotFormat;
+                }
+                
+                return *optval;
             });
         }
     }
