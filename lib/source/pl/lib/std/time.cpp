@@ -184,7 +184,7 @@ namespace pl::lib::libstd::time {
 
                 if ( (dt.hours<0 || dt.hours>23)     ||
                      (dt.minutes<0 || dt.minutes>59) ||
-                     (dt.seconds<0 && dt.seconds>29)  )
+                     (dt.seconds<0 || dt.seconds>29)  )
                 {
                     return s_invalid;
                 }
