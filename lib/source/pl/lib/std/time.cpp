@@ -133,9 +133,9 @@ namespace pl::lib::libstd::time {
                 auto p = params[0].toUnsigned();
 
                 struct DOSDate {
-                    unsigned day   : 5;
-                    unsigned month : 4;
-                    unsigned year  : 7;
+                    u16 day   : 5;
+                    u16 month : 4;
+                    u16 year  : 7;
                 };
 
                 DOSDate dd;
@@ -174,9 +174,9 @@ namespace pl::lib::libstd::time {
                 auto p = params[0].toUnsigned();
 
                 struct DOSTime {
-                    unsigned seconds : 5;
-                    unsigned minutes : 6;
-                    unsigned hours   : 5;
+                    u16 seconds : 5;
+                    u16 minutes : 6;
+                    u16 hours   : 5;
                 };
 
                 DOSTime dt;
