@@ -120,7 +120,7 @@ namespace pl::lib::libstd::time {
                 const wolv::util::Locale &lc = runtime.getLocale();
 
                 using wolv::util::DTOpts;
-                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::DandT);
                 if (!optval) {
                     return s_canNotFormat;
                 }
@@ -161,7 +161,7 @@ namespace pl::lib::libstd::time {
                 const wolv::util::Locale &lc = runtime.getLocale();
 
                 using wolv::util::DTOpts;
-                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D | DTOpts::LongDate);
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D);
                 if (!optval) {
                     return s_canNotFormat;
                 }
