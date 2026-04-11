@@ -710,7 +710,7 @@ namespace pl::core {
                     auto &storage = getStorage();
                     if (value->getSection() != ptrn::Pattern::InstantiationSectionId) {
                         if (heapSection || patternLocalSection) {
-                            storage.resize((value->getOffset() & 0xFFFF'FFFF) + value->getSize());
+                            storage.resize((pattern->getOffset() & 0xFFFF'FFFF) + value->getSize());
                             this->readData(value->getOffset(), storage.data(), value->getSize(), value->getSection());
                         } else if (storage.size() < pattern->getOffset() + pattern->getSize()) {
                             storage.resize(pattern->getOffset() + pattern->getSize());
