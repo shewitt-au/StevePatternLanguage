@@ -184,7 +184,7 @@ namespace pl::core::ast {
             } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode.get())) {
                 while (whileStatement->evaluateCondition(evaluator)) {
                     if (templatePattern->getSection() == ptrn::Pattern::MainSectionId)
-                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                             err::E0004.throwError("Array expanded past end of the data before termination condition was met.", { }, this->getLocation());
 
                     evaluator->handleAbort();
@@ -199,7 +199,7 @@ namespace pl::core::ast {
             std::vector<u8> buffer(templatePattern->getSize());
             while (true) {
                 if (templatePattern->getSection() == ptrn::Pattern::MainSectionId)
-                    if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                    if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                         err::E0004.throwError("Array expanded past end of the data before a null-entry was found.", "Try using a while-sized array instead to limit the size of the array.", this->getLocation());
 
                 evaluator->readData(evaluator->getReadOffset(), buffer.data(), buffer.size(), templatePattern->getSection());
@@ -246,7 +246,7 @@ namespace pl::core::ast {
         evaluator->setReadOffset(startOffset + outputPattern->getSize());
 
         if (outputPattern->getSection() == ptrn::Pattern::MainSectionId)
-            if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+            if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                 err::E0004.throwError("Array expanded past end of the data.", { }, this->getLocation());
     }
 
@@ -327,18 +327,20 @@ namespace pl::core::ast {
                     size_t patternCount = patterns.size();
 
                     if (arrayPattern->getSection() == ptrn::Pattern::MainSectionId)
-                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                             err::E0004.throwError("Array expanded past end of the data.", fmt::format("Entry {} exceeded data by {} bytes.", i, evaluator->getReadOffset() - evaluator->getDataSize()), this->getLocation());
 
                     if (!patterns.empty())
                         addEntries(std::move(patterns));
 
                     auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
-                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
-                    if (ctrlFlow == ControlFlowStatement::Break || ctrlFlow == ControlFlowStatement::Return)
+                    if ( ctrlFlow == ControlFlowStatement::Return) {
                         break;
-                    else if (ctrlFlow == ControlFlowStatement::Continue) {
-
+                    } else if (ctrlFlow == ControlFlowStatement::Break) {
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
+                        break;
+                    } else if (ctrlFlow == ControlFlowStatement::Continue) {
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                         discardEntries(patternCount);
                         continue;
                     }
@@ -358,7 +360,7 @@ namespace pl::core::ast {
                     size_t patternCount = patterns.size();
 
                     if (arrayPattern->getSection() == ptrn::Pattern::MainSectionId)
-                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                             err::E0004.throwError("Array expanded past end of the data before termination condition was met.", { }, this->getLocation());
 
                     if (!patterns.empty())
@@ -366,10 +368,13 @@ namespace pl::core::ast {
 
 
                     auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
-                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
-                    if (ctrlFlow == ControlFlowStatement::Break)
+                    if ( ctrlFlow == ControlFlowStatement::Return) {
                         break;
-                    else if (ctrlFlow == ControlFlowStatement::Continue) {
+                    } else if (ctrlFlow == ControlFlowStatement::Break) {
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
+                        break;
+                    } else if (ctrlFlow == ControlFlowStatement::Continue) {
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                         discardEntries(patternCount);
                         continue;
                     }
@@ -393,7 +398,7 @@ namespace pl::core::ast {
                     std::vector<u8> buffer(pattern->getSize());
 
                     if (arrayPattern->getSection() == ptrn::Pattern::MainSectionId)
-                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                        if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                             err::E0004.throwError("Array expanded past end of the data before a null-entry was found.", "Try using a while-sized array instead to limit the size of the array.", this->getLocation());
 
                     const auto patternSize = pattern->getSize();
@@ -417,10 +422,13 @@ namespace pl::core::ast {
                 }
 
                 auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
-                evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
-                if (ctrlFlow == ControlFlowStatement::Break)
+                if ( ctrlFlow == ControlFlowStatement::Return) {
                     break;
-                else if (ctrlFlow == ControlFlowStatement::Continue) {
+                } else if (ctrlFlow == ControlFlowStatement::Break) {
+                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
+                    break;
+                } else if (ctrlFlow == ControlFlowStatement::Continue) {
+                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                     discardEntries(1);
                     continue;
                 }

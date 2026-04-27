@@ -150,7 +150,7 @@ namespace pl::core::ast {
             this->m_type->createPatterns(evaluator, patterns);
 
             if (arrayPattern->getSection() == ptrn::Pattern::MainSectionId)
-                if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize() + 1))
+                if ((evaluator->getReadOffset() - evaluator->getDataBaseAddress()) > (evaluator->getDataSize()))
                     err::E0004.throwError("Bitfield array expanded past end of the data.", fmt::format("Entry {} exceeded data by {} bytes.", dataIndex, evaluator->getReadOffset() - evaluator->getDataSize()), this->getLocation());
 
             auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
